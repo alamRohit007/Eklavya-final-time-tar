@@ -1,0 +1,31 @@
+#!/bin/bash
+
+source_dest=/home/vagrant/efs
+final_dest=/home/vagrant/backup
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <YYYY-MM-DD HH:MM:SS>"
+    exit 1
+fi
+
+start_time=$(date -d "$1" +"%s")
+end_time=$(date +"%s")
+timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+
+archive_file="$final_dest/backup_$(date -d @$start_time +"%Y-%m-%d-%H-%M-%S")_$timestamp.tar.gz"
+
+cd $source_dest
+
+# Find all files modified or added within the given date range and add them to the tar archive
+find . -newermt @$start_time -type f -print0 | tar -czvf "$archive_file" -C $source_dest --null -T -
+
+# Check if any files were added to the archive, and print a message indicating success or failure
+if [ $(tar -tf "$archive_file" | wc -l) -eq 0 ]; then
+    rm "$archive_file"
+    echo "No files found in $source_dest between $1 and $(date)"
+else
+    echo "Archived $(tar -tf "$archive_file" | wc -l) files to $archive_file"
+fi
+
+
+#./script.sh "2023-03-01 10:30:00"
