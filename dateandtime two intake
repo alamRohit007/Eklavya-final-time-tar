@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Check if the correct number of arguments were passed
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 start_date_time end_date_time"
+  exit 1
+fi
+
+# Store the start and end dates and times
+start_date_time=$1
+end_date_time=$2
+
+# Use find to get a list of files that were modified within the given date range
+files=$(find . -type f -newermt "$start_date_time" ! -newermt "$end_date_time")
+
+# Check if there are any files to archive
+if [ -z "$files" ]; then
+  echo "No files to archive"
+  exit 0
+fi
+
+# Create the tar archive
+tar -cvzf archive.tar.gz $files
+
+# Print a message indicating the number of files that were archived
+num_files=$(echo "$files" | wc -l)
+echo "Archived $num_files files"
