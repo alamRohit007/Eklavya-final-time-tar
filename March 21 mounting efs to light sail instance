@@ -1,0 +1,278 @@
+Command to install utils
+
+yum install -y amazon-efs-utils
+
+
+$ aws ec2 describe-subnets --filters Name=vpc-id,Values=<Default VPC ID> Name=default-for-az,Values=true | jq -r '.Subnets[].SubnetId'
+
+<subnet 1 ID>
+<subnet 2 ID>
+...
+<subnet X ID>    how to put this command with example
+This is an AWS CLI command that retrieves the subnet IDs for the subnets in the default VPC and that are marked as the default for their availability zones, using the aws ec2 describe-subnets command and the jq tool to parse the JSON output.
+
+Here's an example command that you can use, replacing <Default VPC ID> with the actual ID of your default VPC:
+
+scss
+Copy code
+aws ec2 describe-subnets --filters Name=vpc-id,Values=<Default VPC ID> Name=default-for-az,Values=true | jq -r '.Subnets[].SubnetId'
+This command will return a list of the subnet IDs for the subnets in the default VPC that are marked as default for their availability zones, in the following format:
+
+php
+Copy code
+<subnet 1 ID>
+<subnet 2 ID>
+...
+<subnet X ID>
+You can use the output of this command as input for other AWS CLI commands that require subnet IDs, such as launching an instance in a specific subnet or creating a security group with rules for a specific subnet.
+
+
+
+
+Rohit Alam
+this is my vpc id vpc-04fc691da45031e97
+Great! To retrieve the subnet IDs for the subnets in your default VPC, you can run the following command in your terminal or AWS CLI:
+
+javascript
+Copy code
+aws ec2 describe-subnets --filters Name=vpc-id,Values=vpc-04fc691da45031e97 Name=default-for-az,Values=true | jq -r '.Subnets[].SubnetId'
+This command uses the describe-subnets command to retrieve information about the subnets in the specified VPC (vpc-04fc691da45031e97) that are marked as default for their availability zones (default-for-az=true). The output of the command is then piped to the jq command, which extracts the subnet IDs from the JSON output.
+
+The output of this command will be a list of subnet IDs, one per line, like this:
+
+Copy code
+subnet-0123456789abcdef0
+subnet-0123456789abcdef1
+subnet-0123456789abcdef2
+You can use these subnet IDs as needed in other AWS CLI commands or scripts.
+
+
+
+
+Rohit Alam
+aws efs create-mount-target --file-system-id <EFS File System ID> --subnet-id <Subnet ID> | jq -r '.IpAddress'  my efs file system id is fs-0392485b93ad18d90 and subnet ids are                           subnet-0614b685545efcfeb
+subnet-085807c068bb29665
+subnet-0b007edc431c0f3b5
+To create mount targets for your EFS file system (fs-0392485b93ad18d90) in each of your subnets (subnet-0614b685545efcfeb, subnet-085807c068bb29665, subnet-0b007edc431c0f3b5), you can use the following AWS CLI command:
+
+css
+Copy code
+aws efs create-mount-target --file-system-id fs-0392485b93ad18d90 --subnet-id subnet-0614b685545efcfeb --no-verify-certificate && \
+aws efs create-mount-target --file-system-id fs-0392485b93ad18d90 --subnet-id subnet-085807c068bb29665 --no-verify-certificate && \
+aws efs create-mount-target --file-system-id fs-0392485b93ad18d90 --subnet-id subnet-0b007edc431c0f3b5 --no-verify-certificate | jq -r '.IpAddress'
+This command will create a mount target for the specified EFS file system in each of the specified subnets, and then output the IP address of the last mount target created using jq.
+
+The --no-verify-certificate option is included to bypass SSL certificate verification, as it is not necessary for this use case.
+
+You can copy and paste this command into your terminal or AWS CLI, replacing the EFS file system ID and subnet IDs with your own. The output will be the IP address of the last mount target created.
+
+
+
+
+Rohit Alam
+please dont' put no verify certificate as it's thinking this command as unkown
+I apologize for the confusion. You can omit the --no-verify-certificate option if it is not recognized. Here is an updated version of the command without that option:
+
+python
+Copy code
+aws efs create-mount-target --file-system-id fs-0392485b93ad18d90 --subnet-id subnet-0614b685545efcfeb && \
+aws efs create-mount-target --file-system-id fs-0392485b93ad18d90 --subnet-id subnet-085807c068bb29665 && \
+aws efs create-mount-target --file-system-id fs-0392485b93ad18d90 --subnet-id subnet-0b007edc431c0f3b5 | jq -r '.IpAddress'
+Please replace fs-0392485b93ad18d90, subnet-0614b685545efcfeb, subnet-085807c068bb29665, and subnet-0b007edc431c0f3b5 with the appropriate values for your EFS file system and subnets. This command creates a mount target for the EFS file system in each of the specified subnets, and outputs the IP address of the last mount target created using jq.
+
+
+
+
+Rohit Alam
+An error occurred (MountTargetConflict) when calling the CreateMountTarget operation: moun
+t target already exists in this AZ
+The error message MountTargetConflict means that a mount target already exists in the specified subnet for the availability zone where the subnet is located.
+
+You can only have one mount target per subnet and availability zone pair. If you are trying to create multiple mount targets in the same subnet and availability zone, you will receive this error.
+
+To resolve this issue, you should check if a mount target already exists in the specified subnet and availability zone pair by running the following command:
+
+python
+Copy code
+aws efs describe-mount-targets --file-system-id <EFS File System ID> --subnet-id <Subnet ID>
+Replace <EFS File System ID> and <Subnet ID> with the appropriate values for your EFS file system and subnet. This command will return a list of mount targets that exist for the specified EFS file system and subnet.
+
+If you see a mount target listed for the specified subnet and availability zone pair, you should use that existing mount target instead of creating a new one. If you need to create additional mount targets, you will need to use different subnets or availability zones that do not already have a mount target associated with them.
+
+
+
+
+Rohit Alam
+take the efs and subnet id from above to above message
+If you are receiving the MountTargetConflict error message when trying to create a mount target for your EFS file system (fs-0392485b93ad18d90), it means that a mount target already exists in the specified subnet for the availability zone where the subnet is located.
+
+To check if a mount target already exists for the specified subnet and availability zone, you can run the following command:
+
+python
+Copy code
+aws efs describe-mount-targets --file-system-id fs-0392485b93ad18d90 --subnet-id subnet-0614b685545efcfeb
+Replace fs-0392485b93ad18d90 and subnet-0614b685545efcfeb with the appropriate values for your EFS file system and subnet. This command will return a list of mount targets that exist for the specified EFS file system and subnet.
+
+If you see a mount target listed for the specified subnet and availability zone pair, you should use that existing mount target instead of creating a new one. If you need to create additional mount targets, you will need to use different subnets or availability zones that do not already have a mount target associated with them.
+
+
+
+
+Rohit Alam
+Unknown options: --subnet-id, subnet-0614b685545efcfeb
+It seems like the aws efs describe-mount-targets command is not recognizing the --subnet-id option.
+
+Try running the following command instead:
+
+scss
+Copy code
+aws efs describe-mount-targets --file-system-id fs-0392485b93ad18d90 --query "MountTargets[?SubnetId=='subnet-0614b685545efcfeb'].IpAddress" --output text
+Replace fs-0392485b93ad18d90 and subnet-0614b685545efcfeb with the appropriate values for your EFS file system and subnet. This command will return the IP address of the existing mount target in the specified subnet.
+
+If you receive a similar error message when trying to use the aws efs create-mount-target command, it is possible that your AWS CLI version does not support the --subnet-id option. In this case, you can try upgrading your AWS CLI to the latest version, or use an alternative method to create the mount target, such as using the AWS Management Console or the AWS SDK.
+
+
+
+
+Rohit Alam
+it has given me this ip 172.31.32.7
+If the aws efs describe-mount-targets command returned an IP address 172.31.32.7, it means that there is already a mount target associated with the EFS file system (fs-0392485b93ad18d90) in the subnet (subnet-0614b685545efcfeb) and availability zone where the subnet is located.
+
+You can use this IP address to mount your EFS file system. To do this, you will need to connect to an Amazon EC2 instance that is launched in the same subnet as the mount target. Then, you can use the mount command to mount the EFS file system on the EC2 instance using the mount target IP address.
+
+Here is an example command to mount the EFS file system on an EC2 instance running Amazon Linux 2:
+
+javascript
+Copy code
+sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 172.31.32.7:/ /mnt/efs
+This command assumes that the EC2 instance has a mount point directory /mnt/efs where the EFS file system will be mounted. You may need to modify the command to specify a different mount point, depending on your use case.
+
+Also, keep in mind that the EC2 instance needs to have the necessary permissions and security group rules to access the EFS file system. You should review the documentation to ensure that the EC2 instance is properly configured to access the EFS file system.
+
+
+
+
+Rohit Alam
+but how to mount the  lightsail instance with efs 
+To mount an Amazon EFS file system on a Lightsail instance, you will need to follow these general steps:
+
+Create a mount target for the EFS file system in the same subnet as your Lightsail instance. You can do this using the aws efs create-mount-target command.
+
+Connect to your Lightsail instance using SSH. You can use the Lightsail web console or an SSH client to do this.
+
+Install the necessary NFS client packages on your Lightsail instance. Depending on the operating system of your instance, you may need to install different packages. For example, if your Lightsail instance is running Ubuntu, you can install the nfs-common package using the following command:
+
+csharp
+Copy code
+sudo apt-get install nfs-common
+Create a mount point directory on your Lightsail instance where the EFS file system will be mounted. For example, you can create a directory /mnt/efs using the following command:
+bash
+Copy code
+sudo mkdir /mnt/efs
+Mount the EFS file system on your Lightsail instance using the mount target IP address. You can use the mount command for this, similar to the example I provided earlier.
+javascript
+Copy code
+sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 <Mount Target IP>:/ /mnt/efs
+Replace <Mount Target IP> with the IP address of the mount target that you created earlier.
+
+To make the mount persistent across reboots, you can add an entry to the /etc/fstab file on your Lightsail instance. For example, you can add the following line to the /etc/fstab file:
+javascript
+Copy code
+<Mount Target IP>:/ /mnt/efs nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0
+Save the file and exit the editor.
+
+After completing these steps, your Lightsail instance should be able to access the EFS file system mounted at /mnt/efs. You can use the ls and cd commands to navigate to the mount point directory and access the files stored in the EFS file system.
+
+
+
+
+Rohit Alam
+convert all commands into Amazon linux way
+Sure, here are the equivalent Amazon Linux commands:
+
+Create a mount target:
+css
+Copy code
+aws efs create-mount-target --file-system-id <EFS File System ID> --subnet-id <Subnet ID> --security-group-id <Security Group ID> --no-managed-efs --region <Region>
+Replace <EFS File System ID>, <Subnet ID>, <Security Group ID>, and <Region> with the appropriate values for your setup.
+
+Install NFS client packages:
+Copy code
+sudo yum install -y nfs-utils
+Create a mount point directory:
+bash
+Copy code
+sudo mkdir /mnt/efs
+Mount the EFS file system:
+javascript
+Copy code
+sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 <Mount Target IP>:/ /mnt/efs
+Replace <Mount Target IP> with the IP address of the mount target that you created earlier.
+
+Make the mount persistent across reboots:
+bash
+Copy code
+echo '<Mount Target IP>:/ /mnt/efs nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0' | sudo tee -a /etc/fstab
+Again, replace <Mount Target IP> with the IP address of the mount target that you created earlier.
+
+Note that these commands assume that you are running them as the ec2-user on an Amazon Linux instance. If you are using a different user or a different Linux distribution, the commands may need to be modified accordingly.
+
+
+
+
+Rohit Alam
+EFS FILE SYSTEM ID IS fs-0392485b93ad18d90 , SUBNET IDS ARE 
+subnet-0614b685545efcfeb
+subnet-085807c068bb29665
+subnet-0b007edc431c0f3b5 , SECURITY GROUP ID sg-03ba9e1e63fcac44f , Region ap-south-1
+Here are the updated commands with the information you provided:
+
+Create a mount target:
+css
+Copy code
+aws efs create-mount-target --file-system-id fs-0392485b93ad18d90 --subnet-id subnet-0614b685545efcfeb --security-group-id sg-03ba9e1e63fcac44f --no-managed-efs --region ap-south-1
+Install NFS client packages:
+Copy code
+sudo yum install -y nfs-utils
+Create a mount point directory:
+bash
+Copy code
+sudo mkdir /mnt/efs
+Mount the EFS file system:
+javascript
+Copy code
+sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 172.31.32.7:/ /mnt/efs
+Note that the IP address of the mount target was provided earlier as 172.31.32.7.
+
+Make the mount persistent across reboots:
+bash
+Copy code
+echo '172.31.32.7:/ /mnt/efs nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,_netdev 0 0' | sudo tee -a /etc/fstab
+
+
+
+Rohit Alam
+Unknown options: --security-group-id, --no-managed-efs, sg-03ba9e1e63fcac44f
+I apologize for the mistake in the previous response. Here are the updated commands with the correct syntax:
+
+Create a mount target:
+css
+Copy code
+aws efs create-mount-target --file-system-id fs-0392485b93ad18d90 --subnet-id subnet-0614b685545efcfeb --security-groups sg-03ba9e1e63fcac44f --region ap-south-1
+Install NFS client packages:
+Copy code
+sudo yum install -y nfs-utils
+Create a mount point directory:
+bash
+Copy code
+sudo mkdir /mnt/efs
+Mount the EFS file system:
+javascript
+Copy code
+sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 172.31.32.7:/ /mnt/efs
+Note that the IP address of the mount target was provided earlier as 172.31.32.7.
+
+Make the mount persistent across reboots:
+bash
+Copy code
+echo '172.31.32.7:/ /mnt/efs nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,r
